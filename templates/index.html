@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ev Fiyatı Tahmin Sistemi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, rgba(20,30,48,0.85), rgba(36,59,85,0.9)), 
+                        url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2400') center/cover fixed;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(100,200,255,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255,150,100,0.08) 0%, transparent 50%);
+            pointer-events: none;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(60px) saturate(180%);
+            max-width: 1000px;
+            width: 100%;
+            border-radius: 32px;
+            box-shadow: 0 50px 120px rgba(0, 0, 0, 0.5),
+                        0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+            overflow: hidden;
+            position: relative;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 3s infinite;
+            pointer-events: none;
+        }
+
+        .header {
+            padding: 80px 50px 60px;
+            text-align: center;
+            background: linear-gradient(135deg, #1a2332 0%, #2d4563 50%, #3a5a7e 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '🏡';
+            position: absolute;
+            font-size: 250px;
+            opacity: 0.08;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.03));
+        }
+
+        .header h1 {
+            font-size: 52px;
+            font-weight: 900;
+            letter-spacing: -2.5px;
+            color: #ffffff;
+            margin-bottom: 18px;
+            position: relative;
+            text-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+            background: linear-gradient(135deg, #ffffff 0%, #e8f4ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 19px;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 500;
+            position: relative;
+            letter-spacing: 0.8px;
+        }
+
+        .form-content {
+            padding: 60px 50px;
+            background: linear-gradient(to bottom, #ffffff 0%, #f5f8fc 100%);
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+
+        .form-group:nth-child(1) { animation-delay: 0.05s; }
+        .form-group:nth-child(2) { animation-delay: 0.1s; }
+        .form-group:nth-child(3) { animation-delay: 0.15s; }
+        .form-group:nth-child(4) { animation-delay: 0.2s; }
+        .form-group:nth-child(5) { animation-delay: 0.25s; }
+
+        label {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a2332;
+            margin-bottom: 12px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        label::before {
+            content: '▸';
+            color: #2d4563;
+            margin-right: 10px;
+            font-size: 20px;
+            opacity: 0.7;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 18px 22px;
+            border: 2px solid #e1e8f0;
+            border-radius: 16px;
+            font-size: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #ffffff;
+            color: #1a2332;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        }
+
+        input[type="text"]:hover,
+        input[type="number"]:hover {
+            border-color: #b8c9dc;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #2d4563;
+            background: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(45, 69, 99, 0.15);
+        }
+
+        input::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        button {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a2332 0%, #2d4563 50%, #3a5a7e 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: 1px;
+            margin-top: 25px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 12px 35px rgba(26, 35, 50, 0.4);
+            text-transform: uppercase;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 45px rgba(26, 35, 50, 0.5);
+            background: linear-gradient(135deg, #2d4563 0%, #3a5a7e 50%, #4a6a9e 100%);
+        }
+
+        button:active {
+            transform: translateY(-2px);
+        }
+
+        .result {
+            margin-top: 45px;
+            padding: 40px;
+            background: linear-gradient(135deg, rgba(26, 35, 50, 0.06) 0%, rgba(45, 69, 99, 0.08) 100%);
+            border-radius: 24px;
+            text-align: center;
+            border: 2px solid rgba(45, 69, 99, 0.15);
+            animation: fadeInUp 0.6s ease-out;
+            box-shadow: 0 10px 30px rgba(26, 35, 50, 0.12);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #2d4563, #3a5a7e);
+            border-radius: 24px;
+            opacity: 0.1;
+            z-index: -1;
+        }
+
+        .result-value {
+            font-size: 48px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #1a2332 0%, #2d4563 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -2px;
+            margin-bottom: 12px;
+            text-shadow: 0 2px 15px rgba(26, 35, 50, 0.1);
+        }
+
+        .result-label {
+            font-size: 14px;
+            color: #475569;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 28px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                background-attachment: scroll;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            
+            .header {
+                padding: 60px 30px 45px;
+            }
+            
+            .header h1 {
+                font-size: 40px;
+            }
+            
+            .header p {
+                font-size: 17px;
+            }
+            
+            .form-content {
+                padding: 45px 30px;
+            }
+
+            .result-value {
+                font-size: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Ev Fiyatı Tahmini</h1>
+                   </div>
+
+        <div class="form-content">
+            <form action="{{ url_for('predict') }}" method="post">
+                <div class="grid">
+                    <div class="form-group">
+                        <label>Suç Oranı (CRIM)</label>
+                        <input type="text" name="CRIM" placeholder="0.00632" required value="0.00632">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nehir Sınırı (CHAS)</label>
+                        <input type="text" name="CHAS" placeholder="0 veya 1" required value="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nitrik Oksit Konsantrasyonu</label>
+                        <input type="text" name="NOX" placeholder="0.538" required value="0.538">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ortalama Oda Sayısı</label>
+                        <input type="text" name="RM" placeholder="6.575" required value="6.575">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Şehir Merkezine Uzaklık</label>
+                        <input type="text" name="DIS" placeholder="4.09" required value="4.09">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Otoyol Erişim İndeksi</label>
+                        <input type="text" name="RAD" placeholder="1" required value="1">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Öğrenci/Öğretmen Oranı</label>
+                        <input type="text" name="PTRATIO" placeholder="15.3" required value="15.3">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nüfus Yoğunluk İndeksi</label>
+                        <input type="text" name="B" placeholder="396.90" required value="396.90">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Düşük Gelir Grubu Yüzdesi</label>
+                    <input type="text" name="LSTAT" placeholder="4.98" required value="4.98">
+                </div>
+
+                <button type="submit">
+                    <span>Fiyatı Hesapla</span>
+                </button>
+
+                {% if prediction_text %}
+                <div class="result">
+                    <div class="result-value">{{ prediction_text }}</div>
+                    <div class="result-label">Tahmini Ev Değeri</div>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</body>
+</html>
